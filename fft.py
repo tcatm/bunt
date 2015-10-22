@@ -4,10 +4,12 @@ import math
 import colorsys
 import pyaudio
 import struct
+import sys
 from array import array
 from time import sleep, clock
-from pylut import *
 from scipy.fftpack import rfft
+
+from cal import LEDCalibration
 
 UDP_IP = "2a01:170:1112:0:bad8:12ff:fe66:fa1"
 UDP_PORT = 2812
@@ -17,11 +19,11 @@ sock = socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 def hsv(h, s, v):
     return np.array(colorsys.hsv_to_rgb(h, s, v)) * 255
 
-def setleds(lut, data):
+def setleds(cal, data):
     """
     data = [(r, g, b), (r, g, b), ...]
     """
-    data = [lut.ColorFromColor(Color.FromRGBInteger(x[0], x[1], x[2], 8)).ToRGBIntegerArray(8) for x in data]
+    data = [cal.get_rgb(x[0], x[1], x[2]) for x in data]
 
     data = [(x[1], x[0], x[2]) for x in data]
     data = [item for sublist in data for item in sublist]
@@ -34,7 +36,7 @@ BUF_SIZE = 1 * nFFT
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 48000
-FSCALE = 1 / (12000 / (RATE / 2.0))
+FSCALE = 1 / (2000 / (RATE / 2.0))
 
 FALL = 0.87
 RISE = 0.9
@@ -103,7 +105,8 @@ def bezier_gradient(colors):
 
 
 # Feuer
-grad = bezier_gradient([[0, 0, 0], [0.6, 1, 0.10], [0.05, 1, 1], [0.1, 1, 1], [0, 1, 1], [0.17, 0.6, 1], [0.15, 0.1, 1]])
+#grad = bezier_gradient([[0, 0, 0], [0.6, 1, 0.10], [0.05, 1, 1], [0.1, 1, 1], [0, 1, 1], [0.17, 0.6, 1], [0.15, 0.1, 1]])
+grad = bezier_gradient([[0, 0, 0], [0.7, 1, 0.05], [0, 1, 1], [0.04, 1, 1], [0.04, 1, 1], [0.17, 1, 1], [0.15, 0, 1]])
 # Gruen
 #grad = bezier_gradient([[0, 0, 0], [0.66, 0.5, 0.3], [0.5, 1, 1], [0.13, 1, 1], [0.3, 1, 1]])
 #grad = bezier_gradient([[0, 0, 0], [0.9, 0.0, 1]])
@@ -145,9 +148,9 @@ def animate(lut, stream, MAX_y, state):
 
 
 def main():
-  lut = LUT.FromCubeFile("ws2812b-from-srgb.cube")
+  cal = LEDCalibration(sys.argv[1])
 
-  setleds(lut, [[0,0,0]] * 238)
+  setleds(cal, [[0,0,0]] * 238)
 
   p = pyaudio.PyAudio()
   # Used for normalizing signal. If use paFloat32, then it's already -1..1.
@@ -164,7 +167,7 @@ def main():
 
     while True:
       t0 = clock()
-      animate(lut, stream, MAX_y, state)
+      animate(cal, stream, MAX_y, state)
       t1 = clock()
       dt = t1 - t0
       delay = max(0, 1.0/FPS - dt)
@@ -173,7 +176,7 @@ def main():
   except KeyboardInterrupt:
     print("stop")
 
-  setleds(lut, [[0,0,0]] * 238)
+  setleds(cal, [[0,0,0]] * 238)
 
   stream.stop_stream()
   stream.close()
