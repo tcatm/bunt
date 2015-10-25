@@ -3,7 +3,6 @@
 import gtk
 import socket
 import math
-import colorsys
 import sys
 from array import array
 from time import sleep
