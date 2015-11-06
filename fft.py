@@ -124,10 +124,10 @@ def animate(lut, stream, MAX_y, state):
   Y_L = N * rfft(y[::2], nFFT)
   Y_R = N * rfft(y[1::2], nFFT)
 
-  l_l = np.zeros(119)
-  l_r = np.zeros(119)
+  l_l = np.zeros(105)
+  l_r = np.zeros(105)
 
-  for i in range(0, 119):
+  for i in range(0, 105):
     x = int((i*i)/(math.pow(119,2))* nFFT / FSCALE)
     y = int(((i+1)*(i+1))/(math.pow(119,2))* nFFT / FSCALE) + 1
     l_l[i] = sum(Y_L[x:y])
@@ -150,7 +150,7 @@ def animate(lut, stream, MAX_y, state):
 def main():
   cal = LEDCalibration(sys.argv[1])
 
-  setleds(cal, [[0,0,0]] * 238)
+  setleds(cal, [[0,0,0]] * 210)
 
   p = pyaudio.PyAudio()
   # Used for normalizing signal. If use paFloat32, then it's already -1..1.
@@ -176,7 +176,7 @@ def main():
   except KeyboardInterrupt:
     print("stop")
 
-  setleds(cal, [[0,0,0]] * 238)
+  setleds(cal, [[0,0,0]] * 210)
 
   stream.stop_stream()
   stream.close()
