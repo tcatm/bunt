@@ -29,7 +29,7 @@ def setleds(cal, data):
     data = [item for sublist in data for item in sublist]
     sock.sendto(array('B', data).tostring(), (UDP_IP, UDP_PORT))
 
-FPS = 30
+FPS = 50
 
 nFFT = 1024
 BUF_SIZE = 1 * nFFT
@@ -38,10 +38,10 @@ CHANNELS = 2
 RATE = 48000
 FSCALE = 1 / (2000 / (RATE / 2.0))
 
-FALL = 0.87
-RISE = 0.9
+FALL = 0.95
+RISE = 0.98
 
-state = dict(l=np.zeros(119), r=np.zeros(119))
+state = dict(l=np.zeros(105), r=np.zeros(105))
 
 fact_cache = {}
 def fact(n):
@@ -108,7 +108,7 @@ def bezier_gradient(colors):
 #grad = bezier_gradient([[0, 0, 0], [0.6, 1, 0.10], [0.05, 1, 1], [0.1, 1, 1], [0, 1, 1], [0.17, 0.6, 1], [0.15, 0.1, 1]])
 grad = bezier_gradient([[0, 0, 0], [0.7, 1, 0.05], [0, 1, 1], [0.04, 1, 1], [0.04, 1, 1], [0.17, 1, 1], [0.15, 0, 1]])
 # Gruen
-#grad = bezier_gradient([[0, 0, 0], [0.66, 0.5, 0.3], [0.5, 1, 1], [0.13, 1, 1], [0.3, 1, 1]])
+#grad = bezier_gradient([[0, 0, 0], [0.66, 0.5, 0.3], [0.5, 1, 1], [0.13, 1, 1], [0.3, 1, 1], [0.28, 0.6, 1]])
 #grad = bezier_gradient([[0, 0, 0], [0.9, 0.0, 1]])
 
 def animate(lut, stream, MAX_y, state):
@@ -119,7 +119,7 @@ def animate(lut, stream, MAX_y, state):
   # Unpack data, LRLRLR...
   y = np.frombuffer(data, dtype=np.dtype("int16"))
 
-  N = 0.1 / MAX_y
+  N = 0.2 / MAX_y
 
   Y_L = N * rfft(y[::2], nFFT)
   Y_R = N * rfft(y[1::2], nFFT)
@@ -128,8 +128,8 @@ def animate(lut, stream, MAX_y, state):
   l_r = np.zeros(105)
 
   for i in range(0, 105):
-    x = int((i*i)/(math.pow(119,2))* nFFT / FSCALE)
-    y = int(((i+1)*(i+1))/(math.pow(119,2))* nFFT / FSCALE) + 1
+    x = int((i*i)/(math.pow(105,2))* nFFT / FSCALE)
+    y = int(((i+1)*(i+1))/(math.pow(105,2))* nFFT / FSCALE) + 1
     l_l[i] = sum(Y_L[x:y])
     l_r[i] = sum(Y_R[x:y])
 
@@ -142,6 +142,7 @@ def animate(lut, stream, MAX_y, state):
   state['r'] = l_r
 
   data = [grad(min(1, x)) for x in 1 * np.hstack((np.flipud(l_r), l_l))]
+  data = [hsv(3*i/238.0, 1 - 0.5 * x * x * x * x * x * x, x) for (i, x) in zip(range(0, 238), np.hstack((np.flipud(l_r), l_l)))]
 #  data = [[x * 255, x * 255, 0] for x in 1 * np.hstack((np.flipud(l_r), l_l))]
 
   setleds(lut, data)

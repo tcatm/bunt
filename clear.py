@@ -30,4 +30,4 @@ def rgb2grb(data):
 
 import sys
 
-setleds([sys.argv[2], sys.argv[1], sys.argv[3]] * 38 + 200 * [0,0,0])
+setleds([sys.argv[2], sys.argv[1], sys.argv[3]] * 219 + 200 * [0,0,0])

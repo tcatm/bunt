@@ -6,6 +6,7 @@ import math
 import sys
 from array import array
 from time import sleep
+from husl import husl_to_rgb
 
 from cal import LEDCalibration
 
@@ -27,7 +28,10 @@ cs.set_has_opacity_control(False)
 
 def color_changed(foo):
     c = cs.get_current_color()
+    x = husl_to_rgb(c.hue * 360, c.saturation * 100, c.value * 100)
+    print(c.hue, c.saturation, c.value, x)
     data = cal.get_rgb(c.red/256.0, c.green/256.0, c.blue/256.0)
+    data = cal.get_rgb(x[0] * 255, x[1] * 255, x[2] * 255)
     data = [data[1], data[0], data[2]]
     setleds(data * int(sys.argv[2]))
 
