@@ -41,7 +41,7 @@ FSCALE = 1 / (2000 / (RATE / 2.0))
 FALL = 0.95
 RISE = 0.98
 
-state = dict(l=np.zeros(105), r=np.zeros(105))
+state = dict(l=np.zeros(105), r=np.zeros(105), t=0.0)
 
 fact_cache = {}
 def fact(n):
@@ -141,8 +141,14 @@ def animate(lut, stream, MAX_y, state):
   l_r = (1 - RISE) * state['r'] + RISE * np.maximum(FALL * state['r'], l_r)
   state['r'] = l_r
 
+  state['t'] += np.exp((np.sum(l_l[5:20]) + np.sum(l_r[5:20])) / 3000.0)
+
   data = [grad(min(1, x)) for x in 1 * np.hstack((np.flipud(l_r), l_l))]
-  data = [hsv(3*i/238.0, 1 - 0.5 * x * x * x * x * x * x, x) for (i, x) in zip(range(0, 238), np.hstack((np.flipud(l_r), l_l)))]
+  data = [hsv(
+    100.0/(np.abs(i) + 100) + state['t'],
+    1 - 0.5 * x * x * x * x * x * x,
+    x)
+    for (i, x) in zip(range(-110, 110), np.hstack((np.flipud(l_r), l_l)))]
 #  data = [[x * 255, x * 255, 0] for x in 1 * np.hstack((np.flipud(l_r), l_l))]
 
   setleds(lut, data)
